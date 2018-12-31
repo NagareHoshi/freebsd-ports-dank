@@ -1545,6 +1545,7 @@
     SUBDIR += mspdebug
     SUBDIR += mstch
     SUBDIR += mtbl
+    SUBDIR += mull
     SUBDIR += mutagen
     SUBDIR += myrepos
     SUBDIR += nana
