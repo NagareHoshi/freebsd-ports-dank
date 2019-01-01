@@ -325,6 +325,7 @@
     SUBDIR += gwenview
     SUBDIR += hdr_tools
     SUBDIR += heimer
+    SUBDIR += hdrmerge
     SUBDIR += hiptext
     SUBDIR += hobbes-icons-xpm
     SUBDIR += hppsmtools
