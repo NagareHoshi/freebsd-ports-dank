@@ -2,51 +2,62 @@
 # $FreeBSD$
 
 PORTNAME=	inkscape
-PORTVERSION=	0.92.4
-PORTREVISION=	14
+DISTVERSION=	1.0beta2
+DISTVERSIONSUFFIX=  _2019-12-03_2b71d25d45
 CATEGORIES=	graphics gnome
-MASTER_SITES=	https://media.inkscape.org/dl/resources/file/
+MASTER_SITES=	https://inkscape.org/gallery/item/16197/
 
 MAINTAINER=	gnome@FreeBSD.org
 COMMENT=	Full featured open source SVG editor
 
-LICENSE=	GPLv2+ GPLv3+ LGPL21 MPL11
+LICENSE=	GPLv2 GPLv2+ GPLv3 GPLv3+ LGPL21 MPL11
 LICENSE_COMB=	multi
-LICENSE_FILE_GPLv2+ =	${WRKSRC}/GPL2.txt
-LICENSE_FILE_GPLv3+ =	${WRKSRC}/GPL3.txt
-LICENSE_FILE_LGPL21=	${WRKSRC}/LGPL2.1.txt
+LICENSE_FILE_GPLv2  =	${WRKSRC}/LICENSES/GPL-2.0.txt
+LICENSE_FILE_GPLv2+ =	${WRKSRC}/LICENSES/GPL-2.0-or-later.txt
+LICENSE_FILE_GPLv3  =	${WRKSRC}/LICENSES/GPL-3.0.txt
+LICENSE_FILE_GPLv3+ =	${WRKSRC}/LICENSES/GPL-3.0-or-later.txt
+LICENSE_FILE_LGPL21 =	${WRKSRC}/LICENSES/LGPL-2.1.txt
+LICENSE_FILE_LGPL30 =	${WRKSRC}/LICENSES/LGPL-3.0.txt
+LICENSE_FILE_MPL11  =	${WRKSRC}/LICENSES/MPL-1.1.txt
 
 BUILD_DEPENDS=	${LOCALBASE}/include/boost/concept_check.hpp:devel/boost-libs
+
 LIB_DEPENDS=	libpopt.so:devel/popt \
 		libgc.so:devel/boehm-gc \
+		libgdl-3.so:x11-toolkits/gdl \
 		libgsl.so:math/gsl \
-		libgtkspell.so:textproc/gtkspell \
+		libgtkspell3-3.so:textproc/gtkspell3 \
 		liblcms2.so:graphics/lcms2 \
 		libfribidi.so:converters/fribidi \
 		libaspell.so:textproc/aspell \
 		libfontconfig.so:x11-fonts/fontconfig \
 		libfreetype.so:print/freetype2 \
+		libharfbuzz.so:print/harfbuzz \
 		libpotrace.so:graphics/libpotrace \
 		libpng.so:graphics/png \
-		libMagick++-6.so:graphics/ImageMagick6
-RUN_DEPENDS=	${PYNUMPY} \
+		libsoup-2.4.so:devel/libsoup \
+		libenchant-2.so:textproc/enchant2 \
+		libyaml.so:textproc/libyaml \
+		libdouble-conversion.so:devel/double-conversion
+
+RUN_DEPENDS=    ${PYNUMPY} \
 		${PYTHON_PKGNAMEPREFIX}lxml>0:devel/py-lxml@${PY_FLAVOR} \
 		${PYTHON_PKGNAMEPREFIX}scour>0:textproc/py-scour@${PY_FLAVOR}
 
 USES=		compiler:c++11-lib cmake cpe desktop-file-utils gnome \
-		iconv:wchar_t jpeg pathfix pkgconfig python:2.7 \
-		shebangfix tar:bzip2 xorg
-USE_GNOME=	gtkmm24 libxml2 libxslt
-USE_XORG=	x11
-INSTALLS_ICONS=	yes
-CMAKE_ARGS+=	-DWITH_GNOME_VFS:BOOL=NO
+		iconv:wchar_t jpeg pathfix pkgconfig python:3.6+ \
+		shebangfix tar:xz
+USE_GNOME=	gtkmm30 gvfs libxml2 libxslt
 
-SHEBANG_FILES=	cxxtest/cxxtestgen.pl share/extensions/*.p[lm] \
-		share/extensions/*.py share/extensions/genpofiles.sh \
-		fix-roff-punct
+INSTALLS_ICONS=	yes
+
+SHEBANG_FILES=	share/extensions/*.py share/extensions/genpofiles.sh \
+								share/templates/*.py man/fix-roff-punct
 
 OPTIONS_DEFINE=	POPPLER VISIO CDR DBUS WPG
-OPTIONS_DEFAULT=POPPLER VISIO CDR WPG
+OPTIONS_DEFAULT=POPPLER VISIO CDR WPG GM
+OPTIONS_SINGLE=		IMAGICK
+OPTIONS_SINGLE_IMAGICK=	IMAGICK6 GM
 OPTIONS_SUB=	yes
 
 CDR_DESC=		Support for CorelDRAW diagrams
@@ -77,6 +88,13 @@ WPG_DESC=		Support for WordPerfect graphics
 WPG_CMAKE_BOOL=		WITH_LIBWPG
 WPG_LIB_DEPENDS=	libwpg-0.3.so:graphics/libwpg03
 
+IMAGICK_DESC=		Raster image format library
+IMAGICK6_DESC=	Use ImageMagick6
+IMAGICK6_LIB_DEPENDS=	libMagick++-6.so:graphics/ImageMagick6
+IMAGICK6_CMAKE_BOOL=	WITH_IMAGE_MAGICK
+GM_DESC=	Use GraphicsMagick
+GM_LIB_DEPENDS=		libGraphicsMagick.so:graphics/GraphicsMagick
+
 # temporary until the build works for the !NLS case
 USES+=			gettext
 #NLS_CMAKE_BOOL=		WITH_NLS
@@ -88,5 +106,10 @@ post-patch:
 	# Third entry in the table of interpreters is basename of executable
 	@${REINPLACE_CMD} -e 's|python|${PYTHON_VERSION}|3' \
 		${WRKSRC}/src/extension/implementation/script.cpp
+	@${REINPLACE_CMD} -e 's|web-set-att|web_set_att|g' \
+		${WRKSRC}/po/*.po
+	@${REINPLACE_CMD} -e 's|web-transmit-att|web_transmit_att|g' \
+		${WRKSRC}/po/*.po
+	@${TOUCH} ${WRKSRC}/share/extensions/gcodetools_check_for_updates.inx.h
 
 .include <bsd.port.mk>
